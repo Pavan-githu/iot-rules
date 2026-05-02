@@ -1,0 +1,38 @@
+[Unit]
+Description=RaceIoT Hardhat Ethereum Node
+Documentation=https://hardhat.org
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Run as a non-root user for security
+# Create this user on VPS with: sudo useradd -m -s /bin/bash raceiot
+User=raceiot
+Group=raceiot
+
+WorkingDirectory=/opt/raceiot-blockchain
+
+# Start the Hardhat node listening on all interfaces
+# The --hostname 0.0.0.0 flag is what allows the RPi3 to connect remotely.
+# The firewall (ufw) restricts who can actually reach port 8545.
+ExecStart=/usr/bin/npx hardhat node --hostname 0.0.0.0 --port 8545
+
+# Restart automatically if it crashes
+Restart=always
+RestartSec=5
+
+# Log to systemd journal
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hardhat-node
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+# Environment
+Environment=NODE_ENV=production
+Environment=HOME=/home/raceiot
+
+[Install]
+WantedBy=multi-user.target

@@ -1,7 +1,8 @@
 /**
  * deploy.js  –  Hardhat deployment script for:
- *                 1. IoTAuthLog.sol        (audit log + global lockout)
- *                 2. CommitRevealOTP.sol   (commit-reveal second factor)
+ *                 1. IoTAuthLog.sol           (audit log + global lockout)
+ *                 2. CommitRevealOTP.sol      (commit-reveal second factor)
+ *                 3. FirmwareMetadataStore.sol (firmware metadata on-chain store)
  *
  * Usage:
  *   npm install --save-dev hardhat @nomicfoundation/hardhat-toolbox
@@ -27,7 +28,7 @@ async function main() {
     console.log("RPi3 device acct :", deviceAddr);
 
     // ── 1. Deploy IoTAuthLog (audit log + global lockout) ─────────────────────
-    console.log("\n[1/2] Deploying IoTAuthLog...");
+    console.log("\n[1/3] Deploying IoTAuthLog...");
     const IoTAuthLog    = await ethers.getContractFactory("IoTAuthLog");
     const authLog       = await IoTAuthLog.deploy();
     await authLog.waitForDeployment();
@@ -35,12 +36,20 @@ async function main() {
     console.log("  ✅ IoTAuthLog deployed at      :", authLogAddr);
 
     // ── 2. Deploy CommitRevealOTP (commit-reveal second factor) ───────────────
-    console.log("\n[2/2] Deploying CommitRevealOTP...");
+    console.log("\n[2/3] Deploying CommitRevealOTP...");
     const CommitReveal  = await ethers.getContractFactory("CommitRevealOTP");
     const commitReveal  = await CommitReveal.deploy();
     await commitReveal.waitForDeployment();
     const commitRevealAddr = await commitReveal.getAddress();
     console.log("  ✅ CommitRevealOTP deployed at :", commitRevealAddr);
+
+    // ── 3. Deploy FirmwareMetadataStore (firmware metadata on-chain store) ──────
+    console.log("\n[3/3] Deploying FirmwareMetadataStore...");
+    const FirmwareMetadataStore  = await ethers.getContractFactory("FirmwareMetadataStore");
+    const firmwareMeta           = await FirmwareMetadataStore.deploy();
+    await firmwareMeta.waitForDeployment();
+    const firmwareMetaAddr       = await firmwareMeta.getAddress();
+    console.log("  ✅ FirmwareMetadataStore deployed at:", firmwareMetaAddr);
 
     // ── Authorize the RPi3 device on both contracts ────────────────────────────
     if (rpi3Device) {
@@ -62,9 +71,10 @@ async function main() {
     console.log("  Copy this into /etc/iot-gateway/blockchain.conf");
     console.log("════════════════════════════════════════════════");
     console.log("BLOCKCHAIN_RPC_URL=http://<NODE-IP>:8545");
-    console.log("BLOCKCHAIN_AUTHLOG_CONTRACT="    + authLogAddr);
-    console.log("BLOCKCHAIN_COMMITREVEAL_CONTRACT=" + commitRevealAddr);
-    console.log("BLOCKCHAIN_DEVICE_ADDR="         + deviceAddr);
+    console.log("BLOCKCHAIN_AUTHLOG_CONTRACT="         + authLogAddr);
+    console.log("BLOCKCHAIN_COMMITREVEAL_CONTRACT="    + commitRevealAddr);
+    console.log("BLOCKCHAIN_FIRMWAREMETA_CONTRACT="    + firmwareMetaAddr);
+    console.log("BLOCKCHAIN_DEVICE_ADDR="             + deviceAddr);
     console.log("BLOCKCHAIN_CHAIN_ID=1337");
     console.log("════════════════════════════════════════════════");
     console.log("\nReplace <NODE-IP> with the IP of the machine running `npx hardhat node`.");

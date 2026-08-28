@@ -16,6 +16,19 @@
  */
 
 const { ethers } = require("hardhat");
+const fs   = require("fs");
+const path = require("path");
+
+// Replace a KEY=value line in a conf/env file, preserving all other lines.
+function updateKey(filePath, key, value) {
+    if (!fs.existsSync(filePath)) return;
+    const lines   = fs.readFileSync(filePath, "utf8").split("\n");
+    const updated = lines.map(l =>
+        l.startsWith(key + "=") ? `${key}=${value}` : l
+    );
+    fs.writeFileSync(filePath, updated.join("\n"));
+    console.log(`  ✎  Updated ${path.basename(filePath)}: ${key}=${value}`);
+}
 
 async function main() {
     const [deployer, rpi3Device] = await ethers.getSigners();
@@ -58,29 +71,38 @@ async function main() {
         console.log("\nℹ  Single signer – deployer is already authorized on both contracts.");
     }
 
-    // ── Print the config block for the RPi3 ──────────────────────────────────
-    const NODE_IP = process.env.NODE_IP || "<NODE-IP>";
+    // ── Write blockchain.conf locally (works on any machine) ──────────────────
+    const NODE_IP  = process.env.NODE_IP || "192.168.1.6";
+    const localConf = path.join(__dirname, "blockchain.conf");
+    fs.writeFileSync(localConf, [
+        "BLOCKCHAIN_RPC_URL=http://" + NODE_IP + ":8545",
+        "BLOCKCHAIN_AUTHLOG_CONTRACT=" + authLogAddr,
+        "BLOCKCHAIN_DEVICE_ADDR="      + deviceAddr,
+        "BLOCKCHAIN_CHAIN_ID=1337",
+    ].join("\n") + "\n");
+    console.log("\n  ✎  Written: " + localConf);
+
+    // Also update source-tree copy when running on the main dev PC
+    const srcConf = path.resolve(__dirname,
+        "../../sources/meta-userapp-package/recipes-apps/iot-gateway/files/blockchain.conf");
+    updateKey(srcConf, "BLOCKCHAIN_AUTHLOG_CONTRACT", authLogAddr);
+    updateKey(srcConf, "BLOCKCHAIN_DEVICE_ADDR",      deviceAddr);
+
+    // ── Print summary ─────────────────────────────────────────────────────────
     console.log("\n");
     console.log("════════════════════════════════════════════════════════════");
-    console.log("  STEP 1 COMPLETE — copy this into /etc/iot-gateway/blockchain.conf");
+    console.log("  STEP 1 COMPLETE");
     console.log("════════════════════════════════════════════════════════════");
-    console.log("BLOCKCHAIN_RPC_URL=http://" + NODE_IP + ":8545");
-    console.log("BLOCKCHAIN_AUTHLOG_CONTRACT=" + authLogAddr);
-    console.log("BLOCKCHAIN_DEVICE_ADDR="      + deviceAddr);
-    console.log("BLOCKCHAIN_CHAIN_ID=1337");
+    console.log("  IoTAuthLog      :", authLogAddr);
+    console.log("  CommitRevealOTP :", commitRevealAddr);
+    console.log("  RPi3 device     :", deviceAddr);
+    console.log("");
+    console.log("  Copy blockchain.conf to the Pi:");
+    console.log("  scp " + localConf + " pi@<PI-IP>:/etc/iot-gateway/blockchain.conf");
     console.log("");
     console.log("════════════════════════════════════════════════════════════");
-    console.log("  STEP 2 — deploy FirmwareMetadataStore (different project)");
-    console.log("════════════════════════════════════════════════════════════");
-    console.log("  cd ../   (go up to iot-rules/)");
+    console.log("  STEP 2 — run from iot-rules/ to deploy FirmwareMetadataStore:");
     console.log("  npx hardhat run scripts/deployFirmwareMetadataStore.js --network localhost");
-    console.log("  Then copy the printed address into /etc/iot-gateway/firmware.conf:");
-    console.log("  FIRMWARE_CONTRACT=0x<address from that script>");
-    console.log("");
-    console.log("════════════════════════════════════════════════════════════");
-    console.log("  Replace <NODE-IP> with your node's IP (e.g. 192.168.1.6).");
-    console.log("  WARNING: restarting `npx hardhat node` redeploys at NEW addresses.");
-    console.log("           Re-run both deploy scripts and update both config files.");
     console.log("════════════════════════════════════════════════════════════");
 }
 

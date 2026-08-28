@@ -66,19 +66,37 @@ async function main() {
         console.log("\nℹ  Single signer – deployer is already authorized on both contracts.");
     }
 
-    // ── Print the config block for /etc/iot-gateway/blockchain.conf ───────────
-    console.log("\n════════════════════════════════════════════════");
-    console.log("  Copy this into /etc/iot-gateway/blockchain.conf");
-    console.log("════════════════════════════════════════════════");
-    console.log("BLOCKCHAIN_RPC_URL=http://<NODE-IP>:8545");
-    console.log("BLOCKCHAIN_AUTHLOG_CONTRACT="         + authLogAddr);
-    console.log("BLOCKCHAIN_COMMITREVEAL_CONTRACT="    + commitRevealAddr);
-    console.log("BLOCKCHAIN_FIRMWAREMETA_CONTRACT="    + firmwareMetaAddr);
-    console.log("BLOCKCHAIN_DEVICE_ADDR="             + deviceAddr);
+    // ── Print the config blocks for the RPi3 ─────────────────────────────────
+    const NODE_IP = process.env.NODE_IP || "<NODE-IP>";
+    console.log("\n");
+    console.log("════════════════════════════════════════════════════════════");
+    console.log("  DEPLOYMENT COMPLETE — copy these addresses to the RPi3");
+    console.log("════════════════════════════════════════════════════════════");
+    console.log("");
+    console.log("  Each contract has its own unique address (never shared):");
+    console.log("    IoTAuthLog           →  " + authLogAddr);
+    console.log("    CommitRevealOTP      →  " + commitRevealAddr);
+    console.log("    FirmwareMetadataStore→  " + firmwareMetaAddr);
+    console.log("    RPi3 device wallet   →  " + deviceAddr);
+    console.log("");
+    console.log("────────────────────────────────────────────────────────────");
+    console.log("  [1/2] /etc/iot-gateway/blockchain.conf  (auth logging)");
+    console.log("────────────────────────────────────────────────────────────");
+    console.log("BLOCKCHAIN_RPC_URL=http://" + NODE_IP + ":8545");
+    console.log("BLOCKCHAIN_AUTHLOG_CONTRACT=" + authLogAddr);
+    console.log("BLOCKCHAIN_DEVICE_ADDR="      + deviceAddr);
     console.log("BLOCKCHAIN_CHAIN_ID=1337");
-    console.log("════════════════════════════════════════════════");
-    console.log("\nReplace <NODE-IP> with the IP of the machine running `npx hardhat node`.");
-    console.log("For RPi3 localhost node use: 127.0.0.1");
+    console.log("");
+    console.log("────────────────────────────────────────────────────────────");
+    console.log("  [2/2] /etc/iot-gateway/firmware.conf  (OTA firmware)");
+    console.log("────────────────────────────────────────────────────────────");
+    console.log("FIRMWARE_CONTRACT=" + firmwareMetaAddr);
+    console.log("");
+    console.log("════════════════════════════════════════════════════════════");
+    console.log("  Replace <NODE-IP> with your node's IP (e.g. 192.168.1.6).");
+    console.log("  WARNING: restarting `npx hardhat node` deploys new addresses");
+    console.log("           — re-run this script and update both config files.");
+    console.log("════════════════════════════════════════════════════════════");
 }
 
 main().catch((err) => {

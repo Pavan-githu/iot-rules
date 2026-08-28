@@ -28,7 +28,7 @@ async function main() {
     console.log("RPi3 device acct :", deviceAddr);
 
     // ── 1. Deploy IoTAuthLog (audit log + global lockout) ─────────────────────
-    console.log("\n[1/3] Deploying IoTAuthLog...");
+    console.log("\n[1/2] Deploying IoTAuthLog...");
     const IoTAuthLog    = await ethers.getContractFactory("IoTAuthLog");
     const authLog       = await IoTAuthLog.deploy();
     await authLog.waitForDeployment();
@@ -36,20 +36,12 @@ async function main() {
     console.log("  ✅ IoTAuthLog deployed at      :", authLogAddr);
 
     // ── 2. Deploy CommitRevealOTP (commit-reveal second factor) ───────────────
-    console.log("\n[2/3] Deploying CommitRevealOTP...");
+    console.log("\n[2/2] Deploying CommitRevealOTP...");
     const CommitReveal  = await ethers.getContractFactory("CommitRevealOTP");
     const commitReveal  = await CommitReveal.deploy();
     await commitReveal.waitForDeployment();
     const commitRevealAddr = await commitReveal.getAddress();
     console.log("  ✅ CommitRevealOTP deployed at :", commitRevealAddr);
-
-    // ── 3. Deploy FirmwareMetadataStore (firmware metadata on-chain store) ──────
-    console.log("\n[3/3] Deploying FirmwareMetadataStore...");
-    const FirmwareMetadataStore  = await ethers.getContractFactory("FirmwareMetadataStore");
-    const firmwareMeta           = await FirmwareMetadataStore.deploy();
-    await firmwareMeta.waitForDeployment();
-    const firmwareMetaAddr       = await firmwareMeta.getAddress();
-    console.log("  ✅ FirmwareMetadataStore deployed at:", firmwareMetaAddr);
 
     // ── Authorize the RPi3 device on both contracts ────────────────────────────
     if (rpi3Device) {
@@ -66,36 +58,29 @@ async function main() {
         console.log("\nℹ  Single signer – deployer is already authorized on both contracts.");
     }
 
-    // ── Print the config blocks for the RPi3 ─────────────────────────────────
+    // ── Print the config block for the RPi3 ──────────────────────────────────
     const NODE_IP = process.env.NODE_IP || "<NODE-IP>";
     console.log("\n");
     console.log("════════════════════════════════════════════════════════════");
-    console.log("  DEPLOYMENT COMPLETE — copy these addresses to the RPi3");
+    console.log("  STEP 1 COMPLETE — copy this into /etc/iot-gateway/blockchain.conf");
     console.log("════════════════════════════════════════════════════════════");
-    console.log("");
-    console.log("  Each contract has its own unique address (never shared):");
-    console.log("    IoTAuthLog           →  " + authLogAddr);
-    console.log("    CommitRevealOTP      →  " + commitRevealAddr);
-    console.log("    FirmwareMetadataStore→  " + firmwareMetaAddr);
-    console.log("    RPi3 device wallet   →  " + deviceAddr);
-    console.log("");
-    console.log("────────────────────────────────────────────────────────────");
-    console.log("  [1/2] /etc/iot-gateway/blockchain.conf  (auth logging)");
-    console.log("────────────────────────────────────────────────────────────");
     console.log("BLOCKCHAIN_RPC_URL=http://" + NODE_IP + ":8545");
     console.log("BLOCKCHAIN_AUTHLOG_CONTRACT=" + authLogAddr);
     console.log("BLOCKCHAIN_DEVICE_ADDR="      + deviceAddr);
     console.log("BLOCKCHAIN_CHAIN_ID=1337");
     console.log("");
-    console.log("────────────────────────────────────────────────────────────");
-    console.log("  [2/2] /etc/iot-gateway/firmware.conf  (OTA firmware)");
-    console.log("────────────────────────────────────────────────────────────");
-    console.log("FIRMWARE_CONTRACT=" + firmwareMetaAddr);
+    console.log("════════════════════════════════════════════════════════════");
+    console.log("  STEP 2 — deploy FirmwareMetadataStore (different project)");
+    console.log("════════════════════════════════════════════════════════════");
+    console.log("  cd ../   (go up to iot-rules/)");
+    console.log("  npx hardhat run scripts/deployFirmwareMetadataStore.js --network localhost");
+    console.log("  Then copy the printed address into /etc/iot-gateway/firmware.conf:");
+    console.log("  FIRMWARE_CONTRACT=0x<address from that script>");
     console.log("");
     console.log("════════════════════════════════════════════════════════════");
     console.log("  Replace <NODE-IP> with your node's IP (e.g. 192.168.1.6).");
-    console.log("  WARNING: restarting `npx hardhat node` deploys new addresses");
-    console.log("           — re-run this script and update both config files.");
+    console.log("  WARNING: restarting `npx hardhat node` redeploys at NEW addresses.");
+    console.log("           Re-run both deploy scripts and update both config files.");
     console.log("════════════════════════════════════════════════════════════");
 }
 

@@ -41,7 +41,7 @@ module.exports = {
         timeout: 40000,
     },
     paths: {
-        sources:   "..",           // scans iot-rules/blockchain/ and iot-rules/contracts/
+        sources:   "./",           // AuthLog.sol and CommitRevealOTP.sol live here
         artifacts: "./artifacts",
         cache:     "./cache",
         tests:     "./test",

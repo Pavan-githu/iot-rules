@@ -9,6 +9,9 @@ module.exports = {
       optimizer: { enabled: true, runs: 200 },
     },
   },
+  paths: {
+    sources: ".",        // scans iot-rules/contracts/ and iot-rules/blockchain/
+  },
   networks: {
     // Local Hardhat node — start with: npx hardhat node --hostname 0.0.0.0
     localhost: {

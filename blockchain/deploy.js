@@ -87,7 +87,7 @@ async function main() {
     }
 
     // ── Write blockchain.conf ──────────────────────────────────────────────────
-    const NODE_IP   = process.env.NODE_IP || "192.168.1.6";
+    const NODE_IP   = process.env.NODE_IP || "172.20.10.3";
     const localConf = path.join(__dirname, "blockchain.conf");
     fs.writeFileSync(localConf, [
         "BLOCKCHAIN_RPC_URL=http://"        + NODE_IP + ":8545",

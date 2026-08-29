@@ -15,7 +15,7 @@ module.exports = {
   networks: {
     // Local Hardhat node — start with: npx hardhat node --hostname 0.0.0.0
     localhost: {
-      url: process.env.RPC_URL || "http://192.168.1.6:8545",
+      url: process.env.RPC_URL || "http://172.20.10.3:8545",
       chainId: 1337,
       accounts: process.env.SIGNER_KEY ? [process.env.SIGNER_KEY] : "remote",
     },

@@ -75,7 +75,7 @@ async function main() {
     }
 
     // ── Write conf files locally (works on any machine) ───────────────────────
-    const NODE_IP  = process.env.NODE_IP || "192.168.1.6";
+    const NODE_IP  = process.env.NODE_IP || "172.20.10.3";
     const bcConf   = path.join(__dirname, "blockchain.conf");
     const fwConf   = path.join(__dirname, "firmware.conf");
 
